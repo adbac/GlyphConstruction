@@ -133,6 +133,8 @@ explicitMathRe = re.compile(r'\%s(?P<explicitMath>.*?)\%s' % (explicitMathStart,
 
 explicitGlyphNameRe = re.compile(r'\%s(?P<explicitGlyphName>.*?)\%s' % (explicitGlyphNameStart, explicitGlyphNameEnd))
 
+includeFileRe = re.compile(r'^\s*include\((?P<path>.+?)\)\s*$')
+
 
 # error
 
@@ -1326,9 +1328,11 @@ def ParseGlyphConstructionListFromString(source, font=None):
     True
     """
     txt = None
+    filePath = None
     if isinstance(source, str):
         if os.path.exists(source):
-            with open(source) as f:
+            filePath = source
+            with open(filePath) as f:
                 txt = f.read()
         else:
             txt = source
@@ -1337,6 +1341,16 @@ def ParseGlyphConstructionListFromString(source, font=None):
     else:
         raise GlyphBuilderError("Unreadable source: '%s'" % source)
 
+    # parse all include file statements in the text
+    for i in includeFileRe.finditer(txt):
+        if filePath is None:
+            txt = txt.replace(i.group(), "")
+        else:
+            path = i.group("path")
+            absolutePath = os.path.abspath(os.path.join(os.path.dirname(filePath), path))
+            with open(absolutePath, "r") as f:
+                lines = "\n".join(f.readlines())
+            txt = txt.replace(i.group(), lines)
     # parse all variable out of the text
     txt, variables = ParseVariables(txt)
     try:
