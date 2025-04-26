@@ -1250,7 +1250,7 @@ def GlyphConstructionBuilder(construction, font, characterMap=None):
     return destination
 
 
-def ParseIncludes(txt, filePath, recursion=0):
+def ParseIncludes(txt, filePath=None, recursion=0):
     """
     Parse and include external files referenced in the text.
     """
