@@ -1250,6 +1250,27 @@ def GlyphConstructionBuilder(construction, font, characterMap=None):
     return destination
 
 
+def ParseIncludes(txt, filePath, recursion=0):
+    """
+    Parse and include external files referenced in the text.
+    """
+    for i in includeFileRe.finditer(txt):
+        if filePath is None:
+            txt = txt.replace(i.group(), "")
+        else:
+            path = i.group("path")
+            absolutePath = os.path.abspath(os.path.join(os.path.dirname(filePath), path))
+            with open(absolutePath, "r") as f:
+                lines = "\n".join(f.readlines())
+            txt = txt.replace(i.group(), lines)
+            if includeFileRe.search(lines):
+                recursion += 1
+                if recursion > 10:
+                    raise GlyphBuilderError("Recursion limit reached for including files")
+                txt = ParseIncludes(txt, absolutePath, recursion)
+    return txt
+
+
 def ParseVariables(txt):
     """
     Parse all variables from all constructions and remove them.
@@ -1342,15 +1363,7 @@ def ParseGlyphConstructionListFromString(source, font=None):
         raise GlyphBuilderError("Unreadable source: '%s'" % source)
 
     # parse all include file statements in the text
-    for i in includeFileRe.finditer(txt):
-        if filePath is None:
-            txt = txt.replace(i.group(), "")
-        else:
-            path = i.group("path")
-            absolutePath = os.path.abspath(os.path.join(os.path.dirname(filePath), path))
-            with open(absolutePath, "r") as f:
-                lines = "\n".join(f.readlines())
-            txt = txt.replace(i.group(), lines)
+    txt = ParseIncludes(txt, filePath)
     # parse all variable out of the text
     txt, variables = ParseVariables(txt)
     try:
