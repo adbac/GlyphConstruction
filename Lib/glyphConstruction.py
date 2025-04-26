@@ -133,7 +133,7 @@ explicitMathRe = re.compile(r'\%s(?P<explicitMath>.*?)\%s' % (explicitMathStart,
 
 explicitGlyphNameRe = re.compile(r'\%s(?P<explicitGlyphName>.*?)\%s' % (explicitGlyphNameStart, explicitGlyphNameEnd))
 
-includeFileRe = re.compile(r'^\s*include\((?P<path>.+?)\)\s*$')
+includeFileRe = re.compile(r'^\s*include\((?P<path>.+?)\)\s*$', re.MULTILINE)
 
 
 # error
